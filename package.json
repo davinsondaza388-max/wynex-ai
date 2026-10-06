@@ -1,7 +1,6 @@
 {
   "name": "wynex-ai-server",
   "version": "1.0.0",
-  "description": "Servidor de Wynex AI",
   "type": "module",
   "main": "server.js",
   "scripts": {
