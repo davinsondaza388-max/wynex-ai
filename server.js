@@ -7,16 +7,15 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+
 const API_KEY = process.env.GEMINI_API_KEY;
 
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
-if (!API_KEY) {
-  console.error("❌ Falta GEMINI_API_KEY en las variables de entorno.");
-}
-
-const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
+const ai = new GoogleGenAI({
+  apiKey: API_KEY
+});
 
 /* =========================
    INICIO
@@ -25,7 +24,7 @@ const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 app.get("/", (req, res) => {
   res.json({
     ok: true,
-    app: "Wynex AI",
+    app: "Wynex",
     status: "online"
   });
 });
@@ -43,60 +42,39 @@ app.get("/health", (req, res) => {
 });
 
 /* =========================
-   CHAT
+   CHAT WYNEX
 ========================= */
 
 app.post("/api/chat", async (req, res) => {
   try {
-    if (!API_KEY || !ai) {
-      return res.status(500).json({
-        ok: false,
-        error: "Falta GEMINI_API_KEY en Render."
-      });
-    }
-
     const message = req.body?.message;
 
-    if (!message || typeof message !== "string") {
+    if (!message) {
       return res.status(400).json({
         ok: false,
-        error: "Falta el mensaje."
+        error: "No se recibió ningún mensaje."
       });
     }
 
-    const history = Array.isArray(req.body?.history)
-      ? req.body.history
-      : [];
+    console.log("📩 Mensaje recibido:", message);
+    console.log("🤖 Enviando mensaje a Gemini...");
 
-    let conversation = "";
-
-    for (const item of history) {
-      if (!item || !item.content) continue;
-
-      const role = item.role === "assistant"
-        ? "Wynex"
-        : "Usuario";
-
-      conversation += `${role}: ${String(item.content)}\n`;
-    }
-
-    conversation += `Usuario: ${message}\nWynex:`;
-
-    const result = await ai.models.generateContent({
+    const interaction = await ai.interactions.create({
       model: "gemini-3.8-flash",
-      contents: conversation,
-      config: {
-        systemInstruction:
-          "Tu nombre es Wynex. Eres un asistente de inteligencia artificial útil, claro y amigable. Responde en español cuando el usuario hable español."
-      }
+
+      system_instruction:
+        "Tu nombre es Wynex. Eres un asistente de inteligencia artificial amigable, inteligente y útil. Responde siempre de forma clara. Si el usuario habla español, responde en español.",
+
+      input: message
     });
 
-    const answer =
-      result?.text ||
-      result?.response?.text?.() ||
-      "";
+    console.log("✅ Gemini respondió correctamente.");
+
+    const answer = interaction.output_text;
 
     if (!answer) {
+      console.error("❌ Gemini no devolvió output_text.");
+
       return res.status(500).json({
         ok: false,
         error: "Gemini no devolvió texto."
@@ -110,12 +88,14 @@ app.post("/api/chat", async (req, res) => {
 
   } catch (error) {
 
-    console.error("❌ ERROR EN /api/chat:");
+    console.error("=================================");
+    console.error("❌ ERROR DE GEMINI");
     console.error(error);
+    console.error("=================================");
 
     return res.status(500).json({
       ok: false,
-      error: error?.message || "Error interno del servidor."
+      error: error?.message || "Error de Gemini."
     });
   }
 });
@@ -125,6 +105,6 @@ app.post("/api/chat", async (req, res) => {
 ========================= */
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("🟢 Servidor Wynex iniciado correctamente");
+  console.log("🟢 SERVIDOR WYNEX INICIADO");
   console.log("🌐 Puerto:", PORT);
 });
