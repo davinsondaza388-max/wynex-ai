@@ -3,50 +3,41 @@ import cors from "cors";
 import crypto from "crypto";
 
 const app = express();
-
 const PORT = process.env.PORT || 10000;
 
 app.use(cors());
 
-app.use(
-  express.json({
-    limit: "8mb"
-  })
-);
+app.use(express.json({
+  limit: "1mb"
+}));
 
 const requests = new Map();
-
 
 /* =========================
    INICIO
 ========================= */
 
 app.get("/", (req, res) => {
-
   res.json({
     ok: true,
     app: "TrackLink",
     status: "online",
-    version: "3.1"
+    version: "2.0"
   });
-
 });
-
 
 /* =========================
    HEALTH
 ========================= */
 
 app.get("/health", (req, res) => {
-
   res.json({
     ok: true,
     status: "online",
-    version: "3.1"
+    app: "TrackLink",
+    version: "2.0"
   });
-
 });
-
 
 /* =========================
    CREAR SOLICITUD
@@ -56,61 +47,44 @@ app.post("/api/tracklink/create", (req, res) => {
 
   try {
 
-    const id =
-      crypto.randomBytes(12).toString("hex");
-
+    const id = crypto
+      .randomBytes(12)
+      .toString("hex");
 
     requests.set(id, {
-
       id,
-
       status: "waiting",
-
-      createdAt:
-        new Date().toISOString(),
-
+      createdAt: new Date().toISOString(),
       data: null
-
     });
-
 
     const baseUrl =
       `${req.protocol}://${req.get("host")}`;
 
+    const link =
+      `${baseUrl}/share/${id}`;
 
     res.json({
-
       ok: true,
-
       id,
-
-      link:
-        `${baseUrl}/share/${id}`
-
+      link
     });
 
-  }
-
-  catch (error) {
+  } catch (error) {
 
     console.error(error);
 
     res.status(500).json({
-
       ok: false,
-
-      error:
-        "No se pudo crear el enlace."
-
+      error: "No se pudo crear la solicitud."
     });
 
   }
 
 });
 
-
 /* =========================
-   PÁGINA DE PERMISOS
+   PÁGINA DE CONSENTIMIENTO
 ========================= */
 
 app.get("/share/:id", (req, res) => {
@@ -118,61 +92,71 @@ app.get("/share/:id", (req, res) => {
   const request =
     requests.get(req.params.id);
 
-
   if (!request) {
 
     return res.status(404).send(`
-
 <!DOCTYPE html>
-
 <html lang="es">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport"
-content="width=device-width,initial-scale=1">
+content="width=device-width, initial-scale=1.0">
 
-<title>Solicitud</title>
+<title>TrackLink</title>
 
+<style>
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #080808;
+  color: white;
+  font-family: Arial, sans-serif;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+}
+
+.box {
+  max-width: 420px;
+  width: 100%;
+
+  background: #151515;
+
+  border-radius: 24px;
+
+  padding: 28px;
+
+  text-align: center;
+}
+
+</style>
 </head>
 
-<body style="
-margin:0;
-min-height:100vh;
-display:flex;
-align-items:center;
-justify-content:center;
-font-family:Arial,sans-serif;
-background:#fff;
-color:#111;
-padding:25px;
-">
+<body>
 
-<div style="
-max-width:380px;
-text-align:center;
-">
+<div class="box">
 
-<h2>
-Solicitud no disponible
-</h2>
+<h2>TrackLink</h2>
 
-<p style="color:#666">
-Este enlace ya no está disponible.
+<p>
+Solicitud no encontrada.
+</p>
+
+<p>
+Este enlace puede haber expirado.
 </p>
 
 </div>
 
 </body>
-
 </html>
-
-`);
+    `);
 
   }
-
 
   res.send(`
 
@@ -185,198 +169,203 @@ Este enlace ya no está disponible.
 <meta charset="UTF-8">
 
 <meta name="viewport"
-content="width=device-width,initial-scale=1">
+content="width=device-width, initial-scale=1.0">
 
-<title>Permisos</title>
+<title>TrackLink</title>
 
 <style>
 
-*{
-box-sizing:border-box;
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
 }
 
-body{
+body {
 
-margin:0;
+  margin: 0;
 
-min-height:100vh;
+  min-height: 100vh;
 
-background:#fff;
+  background:
+    radial-gradient(
+      circle at top,
+      #17202c,
+      #080808 60%
+    );
 
-color:#111;
+  color: white;
 
-font-family:
-Arial,
-Helvetica,
-sans-serif;
+  display: flex;
 
-display:flex;
+  align-items: center;
 
-justify-content:center;
+  justify-content: center;
 
-align-items:center;
-
-padding:25px;
-
+  padding: 20px;
 }
 
-.container{
+.box {
 
-width:100%;
+  width: 100%;
 
-max-width:390px;
+  max-width: 430px;
 
-}
+  background: rgba(20,20,20,.96);
 
-h1{
+  border: 1px solid #292929;
 
-font-size:28px;
+  border-radius: 25px;
 
-margin-bottom:10px;
+  padding: 28px;
 
-}
-
-.description{
-
-color:#666;
-
-line-height:1.5;
-
-font-size:15px;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.6);
 
 }
 
-.permission{
+.logo {
 
-border:1px solid #e5e5e5;
+  text-align: center;
 
-border-radius:14px;
-
-padding:15px;
-
-margin-top:12px;
-
-background:#fafafa;
+  margin-bottom: 25px;
 
 }
 
-.permission-title{
+.logo h1 {
 
-font-weight:bold;
+  font-size: 34px;
 
-margin-bottom:5px;
-
-}
-
-.permission-text{
-
-color:#777;
-
-font-size:13px;
-
-line-height:1.4;
+  margin: 0;
 
 }
 
-button{
+.blue {
 
-width:100%;
-
-border:0;
-
-border-radius:13px;
-
-padding:16px;
-
-margin-top:20px;
-
-background:#111;
-
-color:white;
-
-font-size:16px;
-
-font-weight:bold;
+  color: #4da3ff;
 
 }
 
-button:disabled{
+.logo p {
 
-opacity:.5;
-
-}
-
-#cameraArea{
-
-display:none;
-
-margin-top:18px;
+  color: #888;
 
 }
 
-#video{
+.info {
 
-width:100%;
+  background: #1b1b1b;
 
-border-radius:15px;
+  border-radius: 15px;
 
-background:#111;
+  padding: 15px;
 
-display:block;
+  margin-top: 10px;
 
-}
-
-#takePhoto{
-
-background:#111;
+  text-align: left;
 
 }
 
-#sendButton{
+.info strong {
 
-background:#16803c;
+  display: block;
 
-display:none;
-
-}
-
-#message{
-
-text-align:center;
-
-margin-top:18px;
-
-color:#666;
-
-font-size:14px;
-
-line-height:1.5;
+  margin-bottom: 5px;
 
 }
 
-#preview{
+.info span {
 
-width:100%;
+  color: #999;
 
-border-radius:15px;
-
-margin-top:12px;
-
-display:none;
+  font-size: 13px;
 
 }
 
-.hidden{
+button {
 
-display:none!important;
+  width: 100%;
+
+  border: 0;
+
+  padding: 16px;
+
+  border-radius: 14px;
+
+  margin-top: 20px;
+
+  background: #4da3ff;
+
+  color: white;
+
+  font-size: 16px;
+
+  font-weight: bold;
 
 }
 
-.success{
+button:disabled {
 
-text-align:center;
+  opacity: .5;
 
-padding:30px 0;
+}
+
+#message {
+
+  text-align: center;
+
+  color: #aaa;
+
+  line-height: 1.5;
+
+  margin-top: 18px;
+
+}
+
+.consent {
+
+  margin-top: 18px;
+
+  text-align: left;
+
+  background: #111;
+
+  border-radius: 15px;
+
+  padding: 15px;
+
+}
+
+.consent label {
+
+  display: block;
+
+  margin: 12px 0;
+
+  color: #ddd;
+
+}
+
+.consent input {
+
+  width: 18px;
+
+  height: 18px;
+
+  vertical-align: middle;
+
+  margin-right: 8px;
+
+}
+
+.small {
+
+  color: #777;
+
+  font-size: 12px;
+
+  line-height: 1.4;
+
+  margin-top: 15px;
 
 }
 
@@ -386,611 +375,355 @@ padding:30px 0;
 
 <body>
 
-<div
-class="container"
-id="permissionPage"
->
+<div class="box">
+
+<div class="logo">
 
 <h1>
-Permisos necesarios
+Track<span class="blue">Link</span>
 </h1>
 
-<p class="description">
-
-Para continuar, puedes autorizar los permisos
-que aparecen abajo.
-
+<p>
+Solicitud de información
 </p>
 
-
-<div class="permission">
-
-<div class="permission-title">
-📍 Ubicación
 </div>
 
-<div class="permission-text">
+<div class="info">
 
-Se solicitará tu ubicación actual.
-Solo se enviará si autorizas el permiso.
+<strong>📍 Ubicación</strong>
 
-</div>
+<span>
+Se solicitará permiso para compartir tu ubicación.
+</span>
 
 </div>
 
+<div class="info">
 
-<div class="permission">
+<strong>📷 Cámara</strong>
 
-<div class="permission-title">
-📷 Cámara
-</div>
-
-<div class="permission-text">
-
-Se solicitará permiso para utilizar la cámara.
-La cámara solo se utilizará después de que
-autorices el permiso y pulses "Tomar foto".
+<span>
+Puedes permitir el acceso a la cámara.
+TrackLink no la activará sin tu autorización.
+</span>
 
 </div>
 
-</div>
+<div class="info">
 
+<strong>📱 Dispositivo</strong>
 
-<div class="permission">
-
-<div class="permission-title">
-📱 Información del dispositivo
-</div>
-
-<div class="permission-text">
-
-Se enviará información básica que el navegador
-permita proporcionar.
+<span>
+Se enviará información básica disponible del navegador
+y dispositivo.
+</span>
 
 </div>
 
-</div>
+<div class="consent">
 
+<label>
 
-<button id="continueButton">
-
-Continuar
-
-</button>
-
-
-<div id="cameraArea">
-
-<video
-id="video"
-autoplay
-playsinline
-></video>
-
-
-<button id="takePhoto">
-
-📷 Tomar foto
-
-</button>
-
-
-<canvas
-id="canvas"
-style="display:none"
-></canvas>
-
-
-<img
-id="preview"
-alt="Vista previa de la fotografía"
+<input
+type="checkbox"
+id="locationConsent"
 >
 
+Permito compartir mi ubicación.
 
-<button
-id="sendButton"
+</label>
+
+<label>
+
+<input
+type="checkbox"
+id="cameraConsent"
 >
 
-✓ Enviar información
+Permito solicitar acceso a mi cámara.
 
-</button>
+</label>
+
+<label>
+
+<input
+type="checkbox"
+id="deviceConsent"
+>
+
+Permito compartir información básica de mi dispositivo.
+
+</label>
 
 </div>
 
+<button id="shareButton">
+
+Aceptar y continuar
+
+</button>
 
 <p id="message"></p>
 
-</div>
+<p class="small">
 
-
-<div
-class="container hidden"
-id="successPage"
->
-
-<div class="success">
-
-<h2>
-✓ Información enviada
-</h2>
-
-<p class="description">
-
-La información autorizada fue enviada
-correctamente.
+Al continuar, el navegador puede mostrar ventanas
+de permiso. Puedes rechazarlas en cualquier momento.
 
 </p>
 
 </div>
 
-</div>
-
-
 <script>
 
-const ID =
-"${req.params.id}";
-
-
-const continueButton =
-document.getElementById(
-"continueButton"
-);
-
-const takePhoto =
-document.getElementById(
-"takePhoto"
-);
-
-const sendButton =
-document.getElementById(
-"sendButton"
-);
-
-const video =
-document.getElementById(
-"video"
-);
-
-const canvas =
-document.getElementById(
-"canvas"
-);
-
-const preview =
-document.getElementById(
-"preview"
-);
-
-const cameraArea =
-document.getElementById(
-"cameraArea"
-);
+const button =
+document.getElementById("shareButton");
 
 const message =
-document.getElementById(
-"message"
-);
+document.getElementById("message");
 
-const permissionPage =
-document.getElementById(
-"permissionPage"
-);
+const locationConsent =
+document.getElementById("locationConsent");
 
-const successPage =
-document.getElementById(
-"successPage"
-);
+const cameraConsent =
+document.getElementById("cameraConsent");
 
+const deviceConsent =
+document.getElementById("deviceConsent");
 
-let locationData = null;
 
-let cameraPermission =
-"not_requested";
-
-let photoData = null;
-
-let cameraStream = null;
-
-
-/* =========================
-   DISPOSITIVO
-========================= */
-
-function getDeviceInfo(){
-
-return {
-
-userAgent:
-navigator.userAgent || "",
-
-platform:
-navigator.platform || "",
-
-language:
-navigator.language || "",
-
-screenWidth:
-window.screen.width,
-
-screenHeight:
-window.screen.height,
-
-devicePixelRatio:
-window.devicePixelRatio || 1
-
-};
-
-}
-
-
-/* =========================
-   UBICACIÓN
-========================= */
-
-function requestLocation(){
-
-return new Promise(
-(resolve) => {
-
-if(!navigator.geolocation){
-
-resolve(null);
-
-return;
-
-}
-
-
-navigator.geolocation.getCurrentPosition(
-
-(position) => {
-
-resolve({
-
-latitude:
-position.coords.latitude,
-
-longitude:
-position.coords.longitude,
-
-accuracy:
-position.coords.accuracy
-
-});
-
-},
-
-() => {
-
-resolve(null);
-
-},
-
-{
-
-enableHighAccuracy:true,
-
-timeout:15000,
-
-maximumAge:0
-
-}
-
-);
-
-});
-
-}
-
-
-/* =========================
-   CÁMARA
-========================= */
-
-async function requestCamera(){
-
-if(
-!navigator.mediaDevices ||
-!navigator.mediaDevices.getUserMedia
-){
-
-cameraPermission =
-"not_supported";
-
-return false;
-
-}
-
-
-try{
-
-cameraStream =
-await navigator.mediaDevices.getUserMedia({
-
-video:true,
-
-audio:false
-
-});
-
-
-cameraPermission =
-"granted";
-
-video.srcObject =
-cameraStream;
-
-cameraArea.style.display =
-"block";
-
-return true;
-
-}
-
-catch(error){
-
-console.error(
-"Cámara:",
-error
-);
-
-cameraPermission =
-"denied";
-
-return false;
-
-}
-
-}
-
-
-/* =========================
-   CONTINUAR
-========================= */
-
-continueButton.onclick =
+button.addEventListener(
+"click",
 async () => {
 
-continueButton.disabled =
-true;
+  if (!locationConsent.checked) {
 
+    message.textContent =
+      "Debes aceptar compartir la ubicación para continuar.";
 
-message.textContent =
-"Solicitando ubicación...";
+    return;
 
+  }
 
-locationData =
-await requestLocation();
+  button.disabled = true;
 
+  message.textContent =
+    "Solicitando permisos...";
 
-if(!locationData){
 
-message.textContent =
-"No se concedió el permiso de ubicación.";
+  /* =========================
+     INFORMACIÓN DEL DISPOSITIVO
+  ========================= */
 
-continueButton.disabled =
-false;
+  let deviceInfo = {
 
-return;
+    userAgent:
+      navigator.userAgent || "",
 
-}
+    platform:
+      navigator.platform || "",
 
+    language:
+      navigator.language || "",
 
-message.textContent =
-"Solicitando permiso de cámara...";
+    screenWidth:
+      window.screen.width,
 
+    screenHeight:
+      window.screen.height,
 
-const cameraOK =
-await requestCamera();
+    devicePixelRatio:
+      window.devicePixelRatio || 1
 
+  };
 
-if(!cameraOK){
 
-message.textContent =
-"El permiso de cámara no fue concedido.";
+  /* =========================
+     CÁMARA
+  ========================= */
 
-continueButton.disabled =
-false;
+  let cameraPermission =
+    "not_requested";
 
-return;
+  let cameraStream = null;
 
-}
 
+  if (cameraConsent.checked) {
 
-continueButton.style.display =
-"none";
+    try {
 
+      if (
+        navigator.mediaDevices &&
+        navigator.mediaDevices.getUserMedia
+      ) {
 
-message.textContent =
-"Permiso concedido. Ahora puedes tomar una fotografía.";
+        cameraStream =
+          await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false
+          });
 
-};
+        cameraPermission =
+          "granted";
 
+        /*
+          Cerramos la cámara inmediatamente.
+          Solo comprobamos el permiso.
+        */
 
-/* =========================
-   TOMAR FOTO
-========================= */
+        cameraStream
+          .getTracks()
+          .forEach(track => track.stop());
 
-takePhoto.onclick =
-() => {
+      } else {
 
-if(!cameraStream){
+        cameraPermission =
+          "not_supported";
 
-return;
+      }
 
-}
+    } catch (error) {
 
+      cameraPermission =
+        "denied";
 
-const width =
-video.videoWidth;
+    }
 
-const height =
-video.videoHeight;
+  }
 
 
-if(!width || !height){
+  /* =========================
+     UBICACIÓN
+  ========================= */
 
-message.textContent =
-"La cámara todavía no está lista.";
+  if (!navigator.geolocation) {
 
-return;
+    message.textContent =
+      "Este navegador no permite obtener ubicación.";
 
-}
+    button.disabled = false;
 
+    return;
 
-canvas.width =
-width;
+  }
 
-canvas.height =
-height;
 
+  message.textContent =
+    "Solicitando ubicación...";
 
-const context =
-canvas.getContext("2d");
 
+  navigator.geolocation.getCurrentPosition(
 
-context.drawImage(
-video,
-0,
-0,
-width,
-height
-);
+    async (position) => {
 
+      const data = {
 
-photoData =
-canvas.toDataURL(
-"image/jpeg",
-0.75
-);
+        latitude:
+          position.coords.latitude,
 
+        longitude:
+          position.coords.longitude,
 
-preview.src =
-photoData;
+        accuracy:
+          position.coords.accuracy,
 
-preview.style.display =
-"block";
+        cameraPermission:
+          cameraPermission,
 
+        deviceInfo:
+          deviceConsent.checked
+            ? deviceInfo
+            : null
 
-sendButton.style.display =
-"block";
+      };
 
 
-takePhoto.style.display =
-"none";
+      try {
 
+        const response =
+          await fetch(
+            "/api/tracklink/submit/${req.params.id}",
+            {
 
-message.textContent =
-"Fotografía lista. Puedes enviarla.";
+              method: "POST",
 
-};
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
 
+              body:
+                JSON.stringify(data)
 
-/* =========================
-   ENVIAR
-========================= */
+            }
+          );
 
-sendButton.onclick =
-async () => {
 
-sendButton.disabled =
-true;
+        const result =
+          await response.json();
 
-message.textContent =
-"Enviando información...";
 
+        if (result.ok) {
 
-if(cameraStream){
+          message.textContent =
+            "✓ Información compartida correctamente.";
 
-cameraStream
-.getTracks()
-.forEach(
-track => track.stop()
-);
+          button.textContent =
+            "✓ Completado";
 
-}
+          button.disabled =
+            true;
 
+        } else {
 
-try{
+          message.textContent =
+            "No se pudo enviar la información.";
 
-const response =
-await fetch(
-"/api/tracklink/submit/" +
-ID,
-{
+          button.disabled =
+            false;
 
-method:"POST",
+        }
 
-headers:{
-"Content-Type":
-"application/json"
-},
+      } catch (error) {
 
-body:JSON.stringify({
+        console.error(error);
 
-latitude:
-locationData.latitude,
+        message.textContent =
+          "Error de conexión con TrackLink.";
 
-longitude:
-locationData.longitude,
+        button.disabled =
+          false;
 
-accuracy:
-locationData.accuracy,
+      }
 
-cameraPermission:
-cameraPermission,
+    },
 
-deviceInfo:
-getDeviceInfo(),
+    (error) => {
 
-photo:
-photoData
+      console.error(error);
 
-})
+      message.textContent =
+        "No se concedió el permiso de ubicación.";
+
+      button.disabled =
+        false;
+
+    },
+
+    {
+
+      enableHighAccuracy: true,
+
+      timeout: 15000,
+
+      maximumAge: 0
+
+    }
+
+  );
 
 });
-
-
-
-const result =
-await response.json();
-
-
-if(!result.ok){
-
-throw new Error(
-result.error ||
-"Error"
-);
-
-}
-
-
-permissionPage.classList.add(
-"hidden"
-);
-
-
-successPage.classList.remove(
-"hidden"
-);
-
-}
-
-catch(error){
-
-console.error(error);
-
-message.textContent =
-"No se pudo enviar la información.";
-
-sendButton.disabled =
-false;
-
-}
-
-};
 
 </script>
 
@@ -998,7 +731,7 @@ false;
 
 </html>
 
-`);
+  `);
 
 });
 
@@ -1008,183 +741,140 @@ false;
 ========================= */
 
 app.post(
-"/api/tracklink/submit/:id",
-(req,res) => {
+  "/api/tracklink/submit/:id",
+  (req, res) => {
 
-try{
+    try {
 
-const request =
-requests.get(req.params.id);
+      const request =
+        requests.get(req.params.id);
 
+      if (!request) {
 
-if(!request){
+        return res.status(404).json({
 
-return res.status(404).json({
+          ok: false,
 
-ok:false,
+          error:
+            "Solicitud no encontrada."
 
-error:
-"Solicitud no encontrada."
+        });
 
-});
-
-}
-
-
-const {
-
-latitude,
-
-longitude,
-
-accuracy,
-
-cameraPermission,
-
-deviceInfo,
-
-photo
-
-} = req.body;
+      }
 
 
-/* UBICACIÓN */
+      const {
 
-if(
-typeof latitude !== "number" ||
-typeof longitude !== "number"
-){
+        latitude,
 
-return res.status(400).json({
+        longitude,
 
-ok:false,
+        accuracy,
 
-error:
-"Ubicación inválida."
+        cameraPermission,
 
-});
+        deviceInfo
 
-}
+      } = req.body;
 
 
-/* FOTO */
+      if (
+        typeof latitude !== "number" ||
+        typeof longitude !== "number"
+      ) {
 
-let validPhoto = null;
+        return res.status(400).json({
 
-if(
-typeof photo === "string" &&
-photo.startsWith(
-"data:image/"
-)
-){
+          ok: false,
 
-/*
- Limitar tamaño para evitar
- solicitudes demasiado grandes.
-*/
+          error:
+            "Ubicación inválida."
 
-if(photo.length <= 7 * 1024 * 1024){
+        });
 
-validPhoto = photo;
-
-}
-
-}
+      }
 
 
-/* GUARDAR */
-
-request.status =
-"received";
+      request.status =
+        "received";
 
 
-request.data = {
+      request.data = {
 
-latitude,
+        latitude,
 
-longitude,
+        longitude,
 
-accuracy:
-typeof accuracy === "number"
-? accuracy
-: null,
+        accuracy:
+          typeof accuracy === "number"
+            ? accuracy
+            : null,
 
-cameraPermission:
-typeof cameraPermission === "string"
-? cameraPermission
-: "not_requested",
+        cameraPermission:
+          typeof cameraPermission === "string"
+            ? cameraPermission
+            : "not_requested",
 
-deviceInfo:
-deviceInfo &&
-typeof deviceInfo === "object"
-? deviceInfo
-: null,
+        deviceInfo:
+          deviceInfo &&
+          typeof deviceInfo === "object"
+            ? deviceInfo
+            : null,
 
-photo:
-validPhoto,
+        receivedAt:
+          new Date().toISOString()
 
-receivedAt:
-new Date().toISOString()
-
-};
+      };
 
 
-requests.set(
-req.params.id,
-request
+      requests.set(
+        req.params.id,
+        request
+      );
+
+
+      console.log(
+        "📍 Ubicación recibida:",
+        req.params.id
+      );
+
+      console.log(
+        "📷 Cámara:",
+        request.data.cameraPermission
+      );
+
+      console.log(
+        "📱 Dispositivo:",
+        request.data.deviceInfo
+      );
+
+
+      res.json({
+
+        ok: true,
+
+        message:
+          "Información recibida."
+
+      });
+
+    } catch (error) {
+
+      console.error(error);
+
+      res.status(500).json({
+
+        ok: false,
+
+        error:
+          "Error al guardar la información."
+
+      });
+
+    }
+
+  }
 );
-
-
-console.log(
-"📍 Ubicación recibida:",
-request.id
-);
-
-console.log(
-"📷 Cámara:",
-request.data.cameraPermission
-);
-
-console.log(
-"📸 Foto:",
-validPhoto
-? "RECIBIDA"
-: "NO RECIBIDA"
-);
-
-console.log(
-"📱 Dispositivo:",
-request.data.deviceInfo
-);
-
-
-res.json({
-
-ok:true,
-
-message:
-"Información recibida."
-
-});
-
-}
-
-catch(error){
-
-console.error(error);
-
-res.status(500).json({
-
-ok:false,
-
-error:
-"Error al guardar la información."
-
-});
-
-}
-
-});
 
 
 /* =========================
@@ -1192,46 +882,45 @@ error:
 ========================= */
 
 app.get(
-"/api/tracklink/result/:id",
-(req,res) => {
+  "/api/tracklink/result/:id",
+  (req, res) => {
 
-const request =
-requests.get(req.params.id);
+    const request =
+      requests.get(req.params.id);
+
+    if (!request) {
+
+      return res.status(404).json({
+
+        ok: false,
+
+        error:
+          "Solicitud no encontrada."
+
+      });
+
+    }
 
 
-if(!request){
+    res.json({
 
-return res.status(404).json({
+      ok: true,
 
-ok:false,
+      id: request.id,
 
-error:
-"Solicitud no encontrada."
+      status:
+        request.status,
 
-});
+      createdAt:
+        request.createdAt,
 
-}
+      data:
+        request.data
 
+    });
 
-res.json({
-
-ok:true,
-
-id:
-request.id,
-
-status:
-request.status,
-
-createdAt:
-request.createdAt,
-
-data:
-request.data
-
-});
-
-});
+  }
+);
 
 
 /* =========================
@@ -1239,17 +928,18 @@ request.data
 ========================= */
 
 app.listen(
-PORT,
-"0.0.0.0",
-() => {
+  PORT,
+  "0.0.0.0",
+  () => {
 
-console.log(
-"🟢 TRACKLINK v3.1 INICIADO"
+    console.log(
+      "🟢 TRACKLINK INICIADO"
+    );
+
+    console.log(
+      "🌐 Puerto:",
+      PORT
+    );
+
+  }
 );
-
-console.log(
-"🌐 Puerto:",
-PORT
-);
-
-});
